@@ -1,12 +1,15 @@
 package com.infin.advice;
 
-import com.infin.exception.UserNotFoundException;
+import com.infin.exception.ErrorType;
+import com.infin.exception.NotFoundException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,11 +28,15 @@ public class ApplicationExceptionHandler {
 
     }
 
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    @ExceptionHandler(UserNotFoundException.class)
-    public Map<String, String> handleUserNotFoundException(UserNotFoundException ex) {
-        Map<String, String> errorMap = new HashMap<String, String>();
-        errorMap.put("message", ex.getMessage());
-        return errorMap;
+
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<ErrorType> handleNotFound(NotFoundException nfe) {
+
+        return new ResponseEntity<ErrorType>(
+                new ErrorType(
+                        new Date(System.currentTimeMillis()).toString(),
+                        "404- NOT FOUND",
+                        nfe.getMessage()),
+                HttpStatus.NOT_FOUND);
     }
 }

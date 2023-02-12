@@ -1,8 +1,11 @@
 package com.infin.entity;
-
+import com.infin.entity.audit.DateAudit;
+import com.infin.entity.client.ClientAdminDetail;
+import com.infin.entity.professional.admin.ProfessionalAdminDetail;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.NaturalId;
 
 import javax.persistence.*;
@@ -16,17 +19,13 @@ import java.util.Set;
 @Entity
 @Table(name = "users", uniqueConstraints = {
         @UniqueConstraint(columnNames = {
-                "username"
-        }),
-        @UniqueConstraint(columnNames = {
                 "email"
         })
 })
-@AllArgsConstructor(staticName = "build")
 @Data
-//@AllArgsConstructor
+@AllArgsConstructor
 @NoArgsConstructor
-public class User {
+public class User extends DateAudit {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -34,10 +33,6 @@ public class User {
     @NotBlank
     @Size(max = 40)
     private String name;
-
-    @NotBlank
-    @Size(max = 15)
-    private String username;
 
     @NaturalId
     @NotBlank
@@ -48,12 +43,28 @@ public class User {
     @NotBlank
     @Size(max = 100)
     private String password;
+
     @NotBlank
     private String mobile;
 
-    @NotBlank
-    @Size(max = 100)
-    private String nationality;
+    @ColumnDefault("0")
+    private Long createdBy;
+
+    @ColumnDefault("0")
+    private Long updatedBy;
+
+    @Column(nullable = false, columnDefinition = "int default 0")
+    private Long verified;
+
+    @OneToOne(fetch = FetchType.LAZY,
+            cascade =  CascadeType.ALL,
+            mappedBy = "user")
+    private ProfessionalAdminDetail professionalAdminDetails;
+
+    @OneToOne(fetch = FetchType.LAZY,
+            cascade =  CascadeType.ALL,
+            mappedBy = "user")
+    private ClientAdminDetail ClientAdminDetails;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "user_roles",
@@ -61,16 +72,17 @@ public class User {
             inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<Role> roles = new HashSet<>();
 
-    public User(String name, String username, String email, String password, String mobile,String nationality) {
+
+
+    public void User(String name, String email, String password, String mobile) {
         this.name = name;
-        this.username = username;
         this.email = email;
-        this.password = password;
         this.mobile = mobile;
-        this.nationality = nationality;
+
+        User(password);
     }
 
-    public User(String password){
+    public void User(String password){
         this.password = password;
     }
 }
