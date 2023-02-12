@@ -13,7 +13,7 @@ import javax.validation.constraints.NotEmpty;
 public class LoginRequest {
 
     @NotEmpty(message = "User name or email is required")
-    private String usernameOrEmail;
+    private String email;
 
     @NotEmpty(message = "password is required")
     private String password;
