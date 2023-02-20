@@ -10,7 +10,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 public interface PlatformAdminService {
     PlatformAdminResponse getPlatformAdminDetail(UserPrincipal currentUser);
+
     PagedResponse<ProfessionalAdminResponse> getProfessionalAdminList(int page, int size);
+
     PagedResponse<ClientAdminResponse> getClientAdminList(int page, int size);
 
     void updatePlatformAdminProfile(Long id, UserRequestDto updateRequest);
@@ -18,3 +20,4 @@ public interface PlatformAdminService {
     @Transactional
     Integer verifyUserAccountById(Long status, Long id);
 }
+

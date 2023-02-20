@@ -4,11 +4,15 @@ import com.infin.dto.PagedResponse;
 import com.infin.dto.UserRequestDto;
 import com.infin.dto.client.ClientAdminResponse;
 import com.infin.dto.platform.admin.PlatformAdminResponse;
+import com.infin.dto.platform.manager.PlatformManagerResponse;
+import com.infin.dto.platform.user.PlatformUserResponse;
 import com.infin.dto.professional.admin.ProfessionalAdminResponse;
 import com.infin.entity.User;
 import com.infin.exception.BadRequestException;
 import com.infin.exception.NotFoundException;
-import com.infin.repository.PlatformAdminServiceRepository;
+import com.infin.repository.PlatformAdminRepository;
+import com.infin.repository.PlatformManagerRepository;
+import com.infin.repository.PlatformUserRepository;
 import com.infin.repository.UserRepository;
 import com.infin.security.UserPrincipal;
 import com.infin.service.PlatformAdminService;
@@ -29,9 +33,10 @@ import java.util.List;
 @Service
 public class PlatformAdminServiceImpl implements PlatformAdminService {
     @Autowired
-    private PlatformAdminServiceRepository platformAdminServiceRepository;
+    private PlatformAdminRepository platformAdminServiceRepository;
     @Autowired
     UserRepository userRepository;
+
     @Override
     public PlatformAdminResponse getPlatformAdminDetail(UserPrincipal currentUser) {
         PlatformAdminResponse platformAdminResponse = platformAdminServiceRepository.findByPlatformAdminId(currentUser.getId()).orElseThrow(()->new NotFoundException(
@@ -113,7 +118,6 @@ public class PlatformAdminServiceImpl implements PlatformAdminService {
         }
         return userRepository.verifyUserAccountById(status, id);
     }
-
     private void validatePageNumberAndSize(int page, int size) {
         if (page < 0) {
             throw new BadRequestException("Page number cannot be less than zero.");

@@ -14,7 +14,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface PlatformAdminServiceRepository extends JpaRepository<User, Long> {
+public interface PlatformAdminRepository extends JpaRepository<User, Long> {
 
     @Query(value = "SELECT new com.infin.dto.platform.admin.PlatformAdminResponse(u.id,u.name,u.email,u.mobile,u.createdBy) FROM User u WHERE u.id =:platformAdminId", nativeQuery = false)
     Optional<PlatformAdminResponse> findByPlatformAdminId(@Param("platformAdminId") Long platformAdminId);

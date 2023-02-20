@@ -3,14 +3,15 @@ package com.infin.controller;
 import com.infin.dto.*;
 import com.infin.dto.client.ClientAdminResponse;
 import com.infin.dto.platform.admin.PlatformAdminResponse;
+import com.infin.dto.platform.manager.PlatformManagerResponse;
+import com.infin.dto.platform.user.PlatformUserResponse;
 import com.infin.dto.professional.admin.ProfessionalAdminResponse;
 import com.infin.entity.User;
 import com.infin.exception.NotFoundException;
 import com.infin.repository.UserRepository;
 import com.infin.security.CurrentUser;
 import com.infin.security.UserPrincipal;
-import com.infin.service.AuthService;
-import com.infin.service.PlatformAdminService;
+import com.infin.service.*;
 import com.infin.util.AppConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -32,6 +33,14 @@ public class PlatformAdminController {
     private AuthService authService;
     @Autowired
     private PlatformAdminService platformAdminService;
+    @Autowired
+    private PlatformManagerService platformManagerService;
+    @Autowired
+    private PlatformUserService platformUserService;
+    @Autowired
+    private ProfessionalAdminService professionalAdminService;
+    @Autowired
+    private ClientAdminService clientAdminService;
 
     @PostMapping("/signin")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
@@ -142,6 +151,19 @@ public class PlatformAdminController {
         return new ResponseEntity(new ApiResponse(true, "Platform manager created successfully"), HttpStatus.CREATED);
     }
 
+    @PostMapping("/create-platform-user")
+    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
+    public ResponseEntity<?> createPlatformUser(@Valid @RequestBody UserRequestDto signUpRequest) {
+        if (userRepository.existsByEmail(signUpRequest.getEmail())) {
+            return new ResponseEntity(new ApiResponse(false, "Email Address already in use!"),
+                    HttpStatus.BAD_REQUEST);
+        }
+
+        User result = authService.userSignUp(signUpRequest);
+
+        return new ResponseEntity(new ApiResponse(true, "Platform user created successfully"), HttpStatus.CREATED);
+    }
+
     @PatchMapping("/verify-account/{id}/{status}")
     @PreAuthorize("hasRole('PLATFORM_ADMIN')")
     public ResponseEntity<?> verifyUserAccountById(@PathVariable Long id, @PathVariable Long status) {
@@ -157,6 +179,112 @@ public class PlatformAdminController {
             e.printStackTrace();
             resp = new ResponseEntity<String>(
                     "Something went wrong ,please try again", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        return resp;
+    }
+
+    @GetMapping("/platform-manager")
+    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
+    public ResponseEntity<?> getAllPlatformManager(@RequestParam(value = "page", defaultValue = AppConstants.DEFAULT_PAGE_NUMBER) int page,
+                                               @RequestParam(value = "size", defaultValue = AppConstants.DEFAULT_PAGE_SIZE) int size) {
+        ResponseEntity<?> resp = null;
+        try {
+            PagedResponse<PlatformManagerResponse> platformManagerResponse = platformManagerService.getAllPlatformManager(page,size);
+            resp = new ResponseEntity<PagedResponse<PlatformManagerResponse>>(platformManagerResponse, HttpStatus.OK);
+        } catch (NotFoundException nfe) {
+            throw nfe;
+        } catch (Exception e) {
+            e.printStackTrace();
+            resp = new ResponseEntity<String>(
+                    "Unable to fetch platform manager list", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        return resp;
+    }
+
+    @GetMapping("/platform-user")
+    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
+    public ResponseEntity<?> getAllPlatformUser(@RequestParam(value = "page", defaultValue = AppConstants.DEFAULT_PAGE_NUMBER) int page,
+                                                   @RequestParam(value = "size", defaultValue = AppConstants.DEFAULT_PAGE_SIZE) int size) {
+        ResponseEntity<?> resp = null;
+        try {
+            PagedResponse<PlatformUserResponse> platformManagerResponse = platformUserService.getAllPlatformUser(page,size);
+            resp = new ResponseEntity<PagedResponse<PlatformUserResponse>>(platformManagerResponse, HttpStatus.OK);
+        } catch (NotFoundException nfe) {
+            throw nfe;
+        } catch (Exception e) {
+            e.printStackTrace();
+            resp = new ResponseEntity<String>(
+                    "Unable to fetch platform user list", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        return resp;
+    }
+
+    @GetMapping("/platform-manaer-profile-detail/{id}")
+    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
+    public ResponseEntity<?> getPlatformManagerDetail(@PathVariable Long id) {
+        ResponseEntity<?> resp = null;
+        try {
+            PlatformManagerResponse platformManagerResponse = platformManagerService.getPlatformManagerDetail(id);
+            resp = new ResponseEntity<PlatformManagerResponse>(platformManagerResponse, HttpStatus.OK);
+        } catch (NotFoundException nfe) {
+            throw nfe;
+        } catch (Exception e) {
+            e.printStackTrace();
+            resp = new ResponseEntity<String>(
+                    "Unable to fetch platform manager Profile", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        return resp;
+    }
+
+    @GetMapping("/platform-user-profile-detail/{id}")
+    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
+    public ResponseEntity<?> getPlatformUserDetail(@PathVariable Long id) {
+        ResponseEntity<?> resp = null;
+        try {
+            PlatformUserResponse platformUserResponse = platformUserService.getPlatformUserDetail(id);
+            resp = new ResponseEntity<PlatformUserResponse>(platformUserResponse, HttpStatus.OK);
+        } catch (NotFoundException nfe) {
+            throw nfe;
+        } catch (Exception e) {
+            e.printStackTrace();
+            resp = new ResponseEntity<String>(
+                    "Unable to fetch platform user Profile", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        return resp;
+    }
+
+    @GetMapping("/client-admin-profile-detail/{id}")
+    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
+    public ResponseEntity<?> getAllClients(@PathVariable Long id) {
+        ResponseEntity<?> resp= null;
+        try {
+            ClientAdminResponse clientAdminResponse =  clientAdminService.getClientAdminDetail(id);
+            resp= new ResponseEntity<ClientAdminResponse> (clientAdminResponse,HttpStatus.OK);
+        } catch (NotFoundException nfe) {
+            throw nfe;
+        }catch (Exception e) {
+            e.printStackTrace();
+            resp= new ResponseEntity<String>(
+                    "Unable to fetch Client Admin Profile", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        return resp;
+
+    }
+
+    @GetMapping("/professional-admin-profile-detail/{id}")
+    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
+    public ResponseEntity<?> getProfessionalAdminDetail(@PathVariable Long id) {
+        ResponseEntity<?> resp= null;
+        try {
+            ProfessionalAdminResponse professionalAdminResponse =  professionalAdminService.getProfessionalAdminDetail(id);
+            resp= new ResponseEntity<ProfessionalAdminResponse> (professionalAdminResponse,HttpStatus.OK);
+
+        }catch (NotFoundException nfe) {
+            throw nfe;
+        } catch (Exception e) {
+            e.printStackTrace();
+            resp= new ResponseEntity<String>(
+                    "Unable to fetch Professional Admin Profile", HttpStatus.INTERNAL_SERVER_ERROR);
         }
         return resp;
     }

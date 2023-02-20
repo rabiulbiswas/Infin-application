@@ -2,6 +2,7 @@ package com.infin.dto;
 
 import com.infin.dto.client.ClientAdminRequest;
 import com.infin.dto.platform.manager.PlatformManagerRequest;
+import com.infin.dto.platform.user.PlatformUserRequest;
 import com.infin.dto.professional.admin.ProfessionalAdminRequest;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -31,5 +32,6 @@ public class UserRequestDto {
     private ClientAdminRequest clientAdminDetail;
 
     private PlatformManagerRequest platformManagerDetail;
+    private PlatformUserRequest platformUserRequest;
 
 }

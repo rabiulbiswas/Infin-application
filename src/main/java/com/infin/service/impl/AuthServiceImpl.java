@@ -8,6 +8,7 @@ import com.infin.entity.RoleName;
 import com.infin.entity.User;
 import com.infin.entity.client.ClientAdminDetail;
 import com.infin.entity.platform.manager.PlatformManagerDetail;
+import com.infin.entity.platform.user.PlatformUserDetail;
 import com.infin.entity.professional.admin.ProfessionalAdminDetail;
 import com.infin.repository.RoleRepository;
 import com.infin.repository.UserRepository;
@@ -85,6 +86,7 @@ public class AuthServiceImpl implements AuthService {
             user.setUpdatedBy(userPrincipal.getId());
         }
         user.setVerified(0l);
+        user.setEnabled(0l);
         if (strRoles == null) {
             roleRepository.findByName(RoleName.NOT_USER_ROLE)
                     .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
@@ -100,10 +102,7 @@ public class AuthServiceImpl implements AuthService {
                     Role platformManagerRole = roleRepository.findByName(RoleName.ROLE_PLATFORM_MANAGER)
                             .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
 
-                    PlatformManagerDetail platformManagerDetail = new PlatformManagerDetail();
-                    platformManagerDetail.setContactAddress(signUpRequest.getPlatformManagerDetail().getContactAddress());
-                    platformManagerDetail.setUploadedDocument(signUpRequest.getPlatformManagerDetail().getUploadedDocument());
-                    platformManagerDetail.setValidIdProof(signUpRequest.getPlatformManagerDetail().getValidIdProof());
+                    PlatformManagerDetail platformManagerDetail = getPlatformManagerDetail(signUpRequest);
 
                     String randomPassword = generatePassword();
                     user.setPassword(passwordEncoder.encode(randomPassword));
@@ -111,33 +110,24 @@ public class AuthServiceImpl implements AuthService {
                     user.setRoles(Collections.singleton(platformManagerRole));
                     user.setPlatformManagerDetails(platformManagerDetail);
                     platformManagerDetail.setUser(user);
-
-                    try {
-                        // Email message
-                        SimpleMailMessage passwordResetEmail = new SimpleMailMessage();
-                        passwordResetEmail.setFrom("support@infin.com");
-                        passwordResetEmail.setTo(signUpRequest.getEmail());
-                        passwordResetEmail.setSubject("Password Reset Request");
-                        passwordResetEmail.setText("You have registedred as platform manager in infin web application:\n"
-                                +"you log in credentials:"
-                                + "User ID =" + signUpRequest.getEmail()+"Password =" +randomPassword);
-
-                        emailService.sendEmail(passwordResetEmail);
-                    }catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                    sendEmail(signUpRequest, randomPassword);
                 } else if (role.equals("platform-user")) {
                     Role platformUserRole = roleRepository.findByName(RoleName.ROLE_PLATFORM_USER)
                             .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
                     user.setRoleId(platformUserRole.getId());
                     user.setRoles(Collections.singleton(platformUserRole));
+                    String randomPassword = generatePassword();
+                    user.setPassword(passwordEncoder.encode(randomPassword));
+
+                    PlatformUserDetail platformUserDetail = getPlatformUserDetail(signUpRequest);
+                    user.setPlatformUserDetail(platformUserDetail);
+                    platformUserDetail.setUser(user);
+                    sendEmail(signUpRequest, randomPassword);
                 } else if (role.equals("professional-admin")) {
                     Role professionalAdminRole = roleRepository.findByName(RoleName.ROLE_PROFESSIONAL_ADMIN)
                             .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
 
-                    ProfessionalAdminDetail professionalAdminDetail = new ProfessionalAdminDetail();
-                    professionalAdminDetail.setMembershipNumber(signUpRequest.getProfessionalAdminDetail().getMembershipNumber());
-                    professionalAdminDetail.setContactAddress(signUpRequest.getProfessionalAdminDetail().getContactAddress());
+                    ProfessionalAdminDetail professionalAdminDetail = getProfessionalAdminDetail(signUpRequest);
 
                     user.setRoleId(professionalAdminRole.getId());
                     user.setRoles(Collections.singleton(professionalAdminRole));
@@ -173,6 +163,47 @@ public class AuthServiceImpl implements AuthService {
             });
         }
        return userRepository.save(user);
+    }
+
+    private static ProfessionalAdminDetail getProfessionalAdminDetail(UserRequestDto signUpRequest) {
+        ProfessionalAdminDetail professionalAdminDetail = new ProfessionalAdminDetail();
+        professionalAdminDetail.setMembershipNumber(signUpRequest.getProfessionalAdminDetail().getMembershipNumber());
+        professionalAdminDetail.setContactAddress(signUpRequest.getProfessionalAdminDetail().getContactAddress());
+        return professionalAdminDetail;
+    }
+
+    private static PlatformManagerDetail getPlatformManagerDetail(UserRequestDto signUpRequest) {
+        PlatformManagerDetail platformManagerDetail = new PlatformManagerDetail();
+        platformManagerDetail.setContactAddress(signUpRequest.getPlatformManagerDetail().getContactAddress());
+        platformManagerDetail.setUploadedDocument(signUpRequest.getPlatformManagerDetail().getUploadedDocument());
+        platformManagerDetail.setValidIdProof(signUpRequest.getPlatformManagerDetail().getValidIdProof());
+        return platformManagerDetail;
+    }
+
+    private static PlatformUserDetail getPlatformUserDetail(UserRequestDto signUpRequest) {
+        PlatformUserDetail platformUserDetail = new PlatformUserDetail();
+        platformUserDetail.setContactAddress(signUpRequest.getPlatformUserRequest().getContactAddress());
+        platformUserDetail.setUploadedDocument(signUpRequest.getPlatformUserRequest().getUploadedDocument());
+        platformUserDetail.setValidIdProof(signUpRequest.getPlatformUserRequest().getValidIdProof());
+        platformUserDetail.setPlatformManagerId(signUpRequest.getPlatformUserRequest().getPlatformManagerId());
+        return platformUserDetail;
+    }
+
+    private void sendEmail(UserRequestDto signUpRequest, String randomPassword) {
+        try {
+            // Email message
+            SimpleMailMessage passwordResetEmail = new SimpleMailMessage();
+            passwordResetEmail.setFrom("support@infin.com");
+            passwordResetEmail.setTo(signUpRequest.getEmail());
+            passwordResetEmail.setSubject("Password Reset Request");
+            passwordResetEmail.setText("You have registedred as platform manager in infin web application:\n"
+                    +"you log in credentials:"
+                    + "User ID =" + signUpRequest.getEmail()+"Password =" + randomPassword);
+
+            emailService.sendEmail(passwordResetEmail);
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private static ClientAdminDetail getClientAdminDetail(UserRequestDto signUpRequest) {

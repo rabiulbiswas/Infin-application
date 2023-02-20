@@ -2,6 +2,7 @@ package com.infin.entity;
 import com.infin.entity.audit.DateAudit;
 import com.infin.entity.client.ClientAdminDetail;
 import com.infin.entity.platform.manager.PlatformManagerDetail;
+import com.infin.entity.platform.user.PlatformUserDetail;
 import com.infin.entity.professional.admin.ProfessionalAdminDetail;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -21,6 +22,12 @@ import java.util.Set;
 @Table(name = "users", uniqueConstraints = {
         @UniqueConstraint(columnNames = {
                 "email"
+        }),
+        @UniqueConstraint(columnNames = {
+                "createdBy"
+        }),
+        @UniqueConstraint(columnNames = {
+                "roleId"
         })
 })
 @Data
@@ -76,6 +83,11 @@ public class User extends DateAudit {
             cascade =  CascadeType.ALL,
             mappedBy = "user")
     private PlatformManagerDetail platformManagerDetails;
+
+    @OneToOne(fetch = FetchType.LAZY,
+            cascade =  CascadeType.ALL,
+            mappedBy = "user")
+    private PlatformUserDetail platformUserDetail;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "user_roles",
