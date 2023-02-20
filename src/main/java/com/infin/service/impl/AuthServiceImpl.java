@@ -2,18 +2,21 @@ package com.infin.service.impl;
 
 import com.infin.dto.JwtAuthenticationResponse;
 import com.infin.dto.LoginRequest;
-import com.infin.dto.SignUpRequest;
+import com.infin.dto.UserRequestDto;
 import com.infin.entity.Role;
 import com.infin.entity.RoleName;
 import com.infin.entity.User;
 import com.infin.entity.client.ClientAdminDetail;
+import com.infin.entity.platform.manager.PlatformManagerDetail;
 import com.infin.entity.professional.admin.ProfessionalAdminDetail;
 import com.infin.repository.RoleRepository;
 import com.infin.repository.UserRepository;
 import com.infin.security.JwtTokenProvider;
 import com.infin.security.UserPrincipal;
 import com.infin.service.AuthService;
+import com.infin.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.SimpleMailMessage;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -26,6 +29,7 @@ import javax.validation.Valid;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 
@@ -46,9 +50,11 @@ public class AuthServiceImpl implements AuthService {
 
     @Autowired
     JwtTokenProvider tokenProvider;
+    @Autowired
+    private EmailService emailService;
 
     @Override
-    public User userSignUp(@Valid SignUpRequest signUpRequest) {
+    public User userSignUp(@Valid UserRequestDto signUpRequest) {
         // Creating user's account
       /*  ProfessionalAdminRequest ProfessionalAdminDetails =  new ProfessionalAdminRequest();
         User user =User.build(0L,signUpRequest.getName(),
@@ -88,16 +94,42 @@ public class AuthServiceImpl implements AuthService {
                 if (role.equals("platform-admin")) {
                     Role platformAdminRole = roleRepository.findByName(RoleName.ROLE_PLATFORM_ADMIN)
                             .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+                    user.setRoleId(platformAdminRole.getId());
                     user.setRoles(Collections.singleton(platformAdminRole));
                 } else if (role.equals("platform-manager")) {
                     Role platformManagerRole = roleRepository.findByName(RoleName.ROLE_PLATFORM_MANAGER)
                             .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
 
+                    PlatformManagerDetail platformManagerDetail = new PlatformManagerDetail();
+                    platformManagerDetail.setContactAddress(signUpRequest.getPlatformManagerDetail().getContactAddress());
+                    platformManagerDetail.setUploadedDocument(signUpRequest.getPlatformManagerDetail().getUploadedDocument());
+                    platformManagerDetail.setValidIdProof(signUpRequest.getPlatformManagerDetail().getValidIdProof());
+
+                    String randomPassword = generatePassword();
+                    user.setPassword(passwordEncoder.encode(randomPassword));
+                    user.setRoleId(platformManagerRole.getId());
                     user.setRoles(Collections.singleton(platformManagerRole));
+                    user.setPlatformManagerDetails(platformManagerDetail);
+                    platformManagerDetail.setUser(user);
+
+                    try {
+                        // Email message
+                        SimpleMailMessage passwordResetEmail = new SimpleMailMessage();
+                        passwordResetEmail.setFrom("support@infin.com");
+                        passwordResetEmail.setTo(signUpRequest.getEmail());
+                        passwordResetEmail.setSubject("Password Reset Request");
+                        passwordResetEmail.setText("You have registedred as platform manager in infin web application:\n"
+                                +"you log in credentials:"
+                                + "User ID =" + signUpRequest.getEmail()+"Password =" +randomPassword);
+
+                        emailService.sendEmail(passwordResetEmail);
+                    }catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 } else if (role.equals("platform-user")) {
                     Role platformUserRole = roleRepository.findByName(RoleName.ROLE_PLATFORM_USER)
                             .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-
+                    user.setRoleId(platformUserRole.getId());
                     user.setRoles(Collections.singleton(platformUserRole));
                 } else if (role.equals("professional-admin")) {
                     Role professionalAdminRole = roleRepository.findByName(RoleName.ROLE_PROFESSIONAL_ADMIN)
@@ -107,23 +139,24 @@ public class AuthServiceImpl implements AuthService {
                     professionalAdminDetail.setMembershipNumber(signUpRequest.getProfessionalAdminDetail().getMembershipNumber());
                     professionalAdminDetail.setContactAddress(signUpRequest.getProfessionalAdminDetail().getContactAddress());
 
+                    user.setRoleId(professionalAdminRole.getId());
                     user.setRoles(Collections.singleton(professionalAdminRole));
                     user.setProfessionalAdminDetails(professionalAdminDetail);
                     professionalAdminDetail.setUser(user);
                 } else if (role.equals("professional-manager")) {
                     Role professionalManagerRole = roleRepository.findByName(RoleName.ROLE_PROFESSIONAL_MANAGER)
                             .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-
+                    user.setRoleId(professionalManagerRole.getId());
                     user.setRoles(Collections.singleton(professionalManagerRole));
                 } else if (role.equals("professional-user")) {
                     Role professionalUserRole = roleRepository.findByName(RoleName.ROLE_PROFESSIONAL_USER)
                             .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-
+                    user.setRoleId(professionalUserRole.getId());
                     user.setRoles(Collections.singleton(professionalUserRole));
                 } else if (role.equals("client-admin")) {
                     Role clientAdminRole = roleRepository.findByName(RoleName.CLIENT_ADMIN)
                             .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-
+                    user.setRoleId(clientAdminRole.getId());
                     ClientAdminDetail clientAdminDetail = getClientAdminDetail(signUpRequest);
                     user.setRoles(Collections.singleton(clientAdminRole));
                     user.setClientAdminDetails(clientAdminDetail);
@@ -142,7 +175,7 @@ public class AuthServiceImpl implements AuthService {
        return userRepository.save(user);
     }
 
-    private static ClientAdminDetail getClientAdminDetail(SignUpRequest signUpRequest) {
+    private static ClientAdminDetail getClientAdminDetail(UserRequestDto signUpRequest) {
         ClientAdminDetail clientAdminDetail = new ClientAdminDetail();
         clientAdminDetail.setCompanyName(signUpRequest.getClientAdminDetail().getCompanyName());
         clientAdminDetail.setPanNumber(signUpRequest.getClientAdminDetail().getPanNumber());
@@ -150,6 +183,23 @@ public class AuthServiceImpl implements AuthService {
         clientAdminDetail.setBusinessType(signUpRequest.getClientAdminDetail().getBusinessType());
         clientAdminDetail.setCommunicationAddress(signUpRequest.getClientAdminDetail().getCommunicationAddress());
         return clientAdminDetail;
+    }
+
+    private static String generatePassword() {
+        String upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        String num = "0123456789";
+        String specialChar = "!@#%";
+        String combination = upper + upper.toLowerCase() + num + specialChar;
+        int len = 6;
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < len; i++) {
+            sb.append(combination.charAt(
+                    ThreadLocalRandom.current().nextInt(
+                            combination.length()
+                    )
+            ));
+        }
+        return sb.toString();
     }
 
     @Override

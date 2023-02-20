@@ -11,6 +11,7 @@ public class ClientAdminResponse {
     private String name;
     private String email;
     private String mobile;
+    private Long clientAdminDetailId;
     private String companyName;
     private String panNumber;
     private String gstNumber;
@@ -18,11 +19,12 @@ public class ClientAdminResponse {
     private String communicationAddress;
     private Long createdBy;
 
-    public ClientAdminResponse(Long id, String name, String email, String mobile, String companyName, String panNumber, String gstNumber, String businessType, String communicationAddress, Long createdBy) {
+    public ClientAdminResponse(Long id, String name, String email, String mobile,Long clientAdminDetailId, String companyName, String panNumber, String gstNumber, String businessType, String communicationAddress, Long createdBy) {
         this.id = id;
         this.name = name;
         this.email = email;
         this.mobile = mobile;
+        this.clientAdminDetailId = clientAdminDetailId;
         this.companyName = companyName;
         this.panNumber = panNumber;
         this.gstNumber = gstNumber;

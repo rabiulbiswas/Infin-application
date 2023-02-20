@@ -1,8 +1,6 @@
 package com.infin.controller;
 
-import com.infin.dto.ApiResponse;
-import com.infin.dto.PagedResponse;
-import com.infin.dto.SignUpRequest;
+import com.infin.dto.*;
 import com.infin.dto.client.ClientAdminResponse;
 import com.infin.dto.professional.admin.ProfessionalAdminResponse;
 import com.infin.entity.User;
@@ -11,6 +9,8 @@ import com.infin.repository.UserRepository;
 import com.infin.security.CurrentUser;
 import com.infin.security.UserPrincipal;
 import com.infin.service.AuthService;
+import com.infin.service.ClientAdminService;
+import com.infin.service.PasswordService;
 import com.infin.service.ProfessionalAdminService;
 import com.infin.util.AppConstants;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,19 +23,26 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import javax.validation.Valid;
 import java.net.URI;
 
+@CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/professional-admin")
 public class ProfessionalAdminController {
 
     @Autowired
     private ProfessionalAdminService professionalAdminService;
+
+    @Autowired
+    private ClientAdminService clientAdminService;
     @Autowired
     UserRepository userRepository;
+
     @Autowired
     private AuthService authService;
+    @Autowired
+    private PasswordService passwordService;
 
     @PostMapping("/signup")
-    public ResponseEntity<?> registerUser(@Valid @RequestBody SignUpRequest signUpRequest) {
+    public ResponseEntity<?> registerUser(@Valid @RequestBody UserRequestDto signUpRequest) {
         if(userRepository.existsByEmail(signUpRequest.getEmail())) {
             return new ResponseEntity(new ApiResponse(false, "Email Address already in use!"),
                     HttpStatus.BAD_REQUEST);
@@ -50,6 +57,27 @@ public class ProfessionalAdminController {
         return ResponseEntity.created(location).body(new ApiResponse(true, "User registered successfully"));
     }
 
+    @PostMapping("/update-profile")
+    public ResponseEntity<?> updateProfessionalAdmin(@CurrentUser UserPrincipal currentUser, @RequestBody UserRequestDto updateRequest){
+
+        ResponseEntity<String> resp = null;
+        try {
+            professionalAdminService.updateProfessionalAdminProfile(currentUser.getId(),updateRequest);
+            resp = new ResponseEntity(new ApiResponse(true, "Professional Admin Profile Updated Successfully"),
+                    HttpStatus.OK);
+
+        } catch (NotFoundException nfe) {
+            throw nfe;
+        } catch (Exception e) {
+            e.printStackTrace();
+            resp = new ResponseEntity<String>(
+                    "Unable to Update Professional Admin profile",
+                    HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        return resp;
+    }
+
+
     @GetMapping("/client")
     @PreAuthorize("hasRole('PROFESSIONAL_ADMIN')")
     public PagedResponse<ClientAdminResponse> getAllClients(@CurrentUser UserPrincipal currentUser,
@@ -63,7 +91,7 @@ public class ProfessionalAdminController {
     public ResponseEntity<?> getAllClients(@PathVariable Long clientDetailId) {
         ResponseEntity<?> resp= null;
         try {
-            ClientAdminResponse clientAdminResponse =  professionalAdminService.getClientAdminDetail(clientDetailId);
+            ClientAdminResponse clientAdminResponse =  clientAdminService.getClientAdminDetail(clientDetailId);
             resp= new ResponseEntity<ClientAdminResponse> (clientAdminResponse,HttpStatus.OK);
         } catch (NotFoundException nfe) {
             throw nfe;
@@ -80,7 +108,7 @@ public class ProfessionalAdminController {
     public ResponseEntity<?> getProfessionalAdminDetail(@CurrentUser UserPrincipal currentUser) {
         ResponseEntity<?> resp= null;
         try {
-            ProfessionalAdminResponse professionalAdminResponse =  professionalAdminService.getProfessionalAdminDetail(currentUser);
+            ProfessionalAdminResponse professionalAdminResponse =  professionalAdminService.getProfessionalAdminDetail(currentUser.getId());
             resp= new ResponseEntity<ProfessionalAdminResponse> (professionalAdminResponse,HttpStatus.OK);
 
         }catch (NotFoundException nfe) {
@@ -92,4 +120,26 @@ public class ProfessionalAdminController {
         }
         return resp;
     }
+
+    @PostMapping("/change-password")
+    @PreAuthorize("hasRole('PROFESSIONAL_ADMIN')")
+    public ResponseEntity<?> changePassword(@CurrentUser UserPrincipal currentUser,@RequestBody ChangePasswordRequest changePasswordRequest){
+
+        ResponseEntity<String> resp = null;
+        try {
+            passwordService.changePassword(currentUser.getId(),changePasswordRequest);
+            resp = new ResponseEntity(new ApiResponse(true, "You have successfully changed your password."),
+                    HttpStatus.OK);
+
+        } catch (NotFoundException nfe) {
+            throw nfe;
+        } catch (Exception e) {
+            e.printStackTrace();
+            resp = new ResponseEntity<String>(
+                    "Something went wrong,please try again",
+                    HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        return resp;
+    }
+
 }

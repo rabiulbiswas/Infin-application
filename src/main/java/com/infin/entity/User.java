@@ -1,6 +1,7 @@
 package com.infin.entity;
 import com.infin.entity.audit.DateAudit;
 import com.infin.entity.client.ClientAdminDetail;
+import com.infin.entity.platform.manager.PlatformManagerDetail;
 import com.infin.entity.professional.admin.ProfessionalAdminDetail;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -46,7 +47,9 @@ public class User extends DateAudit {
 
     @NotBlank
     private String mobile;
-
+    private String resetToken;
+    @ColumnDefault("0")
+    private Long roleId;
     @ColumnDefault("0")
     private Long createdBy;
 
@@ -55,6 +58,9 @@ public class User extends DateAudit {
 
     @Column(nullable = false, columnDefinition = "int default 0")
     private Long verified;
+
+    @ColumnDefault("0")
+    private Long enabled;
 
     @OneToOne(fetch = FetchType.LAZY,
             cascade =  CascadeType.ALL,
@@ -65,6 +71,11 @@ public class User extends DateAudit {
             cascade =  CascadeType.ALL,
             mappedBy = "user")
     private ClientAdminDetail ClientAdminDetails;
+
+    @OneToOne(fetch = FetchType.LAZY,
+            cascade =  CascadeType.ALL,
+            mappedBy = "user")
+    private PlatformManagerDetail platformManagerDetails;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "user_roles",
@@ -85,4 +96,5 @@ public class User extends DateAudit {
     public void User(String password){
         this.password = password;
     }
+
 }

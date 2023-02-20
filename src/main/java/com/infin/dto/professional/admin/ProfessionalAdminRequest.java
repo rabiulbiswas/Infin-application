@@ -11,6 +11,7 @@ import javax.validation.constraints.NotEmpty;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ProfessionalAdminRequest {
+    private Long professionalAdminDetailId;
     @NotEmpty(message = "Membership Number shouldn't be empty")
     private String membershipNumber;
     @NotEmpty(message = "Contact Address shouldn't be empty")
