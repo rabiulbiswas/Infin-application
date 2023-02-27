@@ -2,7 +2,6 @@ package com.infin.service.impl;
 
 import com.infin.dto.PagedResponse;
 import com.infin.dto.UserRequestDto;
-import com.infin.dto.client.ClientAdminResponse;
 import com.infin.dto.professional.admin.ProfessionalAdminResponse;
 import com.infin.entity.User;
 import com.infin.entity.professional.admin.ProfessionalAdminDetail;
@@ -33,24 +32,24 @@ public class ProfessionalAdminServiceImpl implements ProfessionalAdminService {
     private ProfessionalAdminRespository professionalAdminRespository;
     @Autowired
     UserRepository userRepository;
+
     @Override
-    public PagedResponse<ClientAdminResponse> getAllClients(UserPrincipal currentUser, int page, int size) {
+    public PagedResponse<ProfessionalAdminResponse> getProfessionalAdminList(int page, int size) {
         validatePageNumberAndSize(page, size);
 
         Pageable pageable = PageRequest.of(page,size, Sort.Direction.DESC,"createdAt");
-        Page<ClientAdminResponse> clients = professionalAdminRespository.findByUser(currentUser.getId(),pageable);
+        Page<ProfessionalAdminResponse> professionalAdminResponse = professionalAdminRespository.findAllProfessionalAdmin(pageable);
 
 
-        if (clients.getNumberOfElements() == 0) {
-            return new PagedResponse<>(Collections.emptyList(), clients.getNumber(),
-                    clients.getSize(), clients.getTotalElements(), clients.getTotalPages(), clients.isLast());
+        if (professionalAdminResponse.getNumberOfElements() == 0) {
+            return new PagedResponse<>(Collections.emptyList(), professionalAdminResponse.getNumber(),
+                    professionalAdminResponse.getSize(), professionalAdminResponse.getTotalElements(), professionalAdminResponse.getTotalPages(), professionalAdminResponse.isLast());
         }
-        List<ClientAdminResponse> clientAdminResponse = clients.getContent();
+        List<ProfessionalAdminResponse> professionalAdminResponseList = professionalAdminResponse.getContent();
 
-        return new PagedResponse<>(clientAdminResponse, clients.getNumber(),
-                clients.getSize(), clients.getTotalElements(), clients.getTotalPages(), clients.isLast());
+        return new PagedResponse<>(professionalAdminResponseList, professionalAdminResponse.getNumber(),
+                professionalAdminResponse.getSize(), professionalAdminResponse.getTotalElements(), professionalAdminResponse.getTotalPages(), professionalAdminResponse.isLast());
     }
-
 
     @Override
     public ProfessionalAdminResponse getProfessionalAdminDetail(Long id) {
@@ -65,7 +64,7 @@ public class ProfessionalAdminServiceImpl implements ProfessionalAdminService {
     }
 
     @Override
-    public Long updateProfessionalAdminProfile(Long id, UserRequestDto updateRequest)
+    public void updateProfessionalAdminProfile(Long id, UserRequestDto updateRequest)
     {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserPrincipal userPrincipal =(UserPrincipal) authentication.getPrincipal();
@@ -78,10 +77,10 @@ public class ProfessionalAdminServiceImpl implements ProfessionalAdminService {
                             .toString());
         }
         User updateProfessionaAdminldata = userRepository.findById(id).get();
-        updateProfessionaAdminldata.setName(updateRequest.getName());
+        updateProfessionaAdminldata.setFirstName(updateRequest.getFirstName());
+        updateProfessionaAdminldata.setLastName(updateRequest.getLastName());
         updateProfessionaAdminldata.setMobile(updateRequest.getMobile());
         updateProfessionaAdminldata.setUpdatedBy(userPrincipal.getId());
-         new ProfessionalAdminDetail();
         Optional<ProfessionalAdminDetail> fetchProfessionalAdminDetail =  professionalAdminRespository.findById(updateRequest.getProfessionalAdminDetail().getProfessionalAdminDetailId());
         if(fetchProfessionalAdminDetail.isPresent()){
             ProfessionalAdminDetail updateProfessionalAdminDetail = fetchProfessionalAdminDetail.get();
@@ -90,9 +89,7 @@ public class ProfessionalAdminServiceImpl implements ProfessionalAdminService {
             updateProfessionaAdminldata.setProfessionalAdminDetails(updateProfessionalAdminDetail);
             updateProfessionalAdminDetail.setUser(updateProfessionaAdminldata);
         }
-        return userRepository.save(updateProfessionaAdminldata).getId();
-
-
+       userRepository.save(updateProfessionaAdminldata);
     }
 
     private void validatePageNumberAndSize(int page, int size) {

@@ -14,9 +14,12 @@ import java.util.Optional;
 @Repository
 public interface PlatformUserRepository extends JpaRepository<PlatformUserDetail,Long> {
 
-    @Query(value = "SELECT new com.infin.dto.platform.user.PlatformUserResponse(u.id,u.name,u.email,u.mobile,p.id,p.contactAddress,p.uploadedDocument,p.validIdProof,p.platformManagerId) FROM User u INNER JOIN PlatformUserDetail p on p.user.id = u.id WHERE u.roleId =3", nativeQuery = false)
+    @Query(value = "SELECT new com.infin.dto.platform.user.PlatformUserResponse(u.id,u.firstName,u.lastName,u.email,u.mobile,p.id,p.contactAddress,p.uploadedDocument,p.validIdProof,p.platformManagerId,u.isVerified,u.isEnabled) FROM User u INNER JOIN PlatformUserDetail p on p.user.id = u.id WHERE u.roleId =3", nativeQuery = false)
     Page<PlatformUserResponse> findAllPlatformUser(Pageable pageable);
 
-    @Query(value = "SELECT new com.infin.dto.platform.user.PlatformUserResponse(u.id,u.name,u.email,u.mobile,p.id,p.contactAddress,p.uploadedDocument,p.validIdProof,p.platformManagerId) FROM User u INNER JOIN PlatformUserDetail p on p.user.id = u.id WHERE u.id =:platformUserId", nativeQuery = false)
+    @Query(value = "SELECT new com.infin.dto.platform.user.PlatformUserResponse(u.id,u.firstName,u.lastName,u.email,u.mobile,p.id,p.contactAddress,p.uploadedDocument,p.validIdProof,p.platformManagerId,u.isVerified,u.isEnabled) FROM User u INNER JOIN PlatformUserDetail p on p.user.id = u.id WHERE p.platformManagerId =:platformManagerId AND u.roleId =3", nativeQuery = false)
+    Page<PlatformUserResponse> findAllPlatformUserByPlatformManagerId(@Param("platformManagerId") Long platformManagerId,Pageable pageable);
+
+    @Query(value = "SELECT new com.infin.dto.platform.user.PlatformUserResponse(u.id,u.firstName,u.lastName,u.email,u.mobile,p.id,p.contactAddress,p.uploadedDocument,p.validIdProof,p.platformManagerId,u.isVerified,u.isEnabled) FROM User u INNER JOIN PlatformUserDetail p on p.user.id = u.id WHERE u.id =:platformUserId", nativeQuery = false)
     Optional<PlatformUserResponse> findByPlatformUserId(@Param("platformUserId") Long platformUserId);
 }

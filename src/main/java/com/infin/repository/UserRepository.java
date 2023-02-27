@@ -20,6 +20,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Boolean existsByEmail(String email);
 
     @Modifying
-    @Query("UPDATE User SET verified =:status WHERE id=:id")
+    @Query("UPDATE User SET is_verified =:status WHERE id=:id")
     Integer verifyUserAccountById(Long status,Long id);
 }

@@ -8,7 +8,8 @@ import lombok.*;
 public class ClientAdminResponse {
 
     private Long id;
-    private String name;
+    private String firstName;
+    private String lastName;
     private String email;
     private String mobile;
     private Long clientAdminDetailId;
@@ -17,11 +18,13 @@ public class ClientAdminResponse {
     private String gstNumber;
     private String businessType;
     private String communicationAddress;
-    private Long createdBy;
+    private Long isVerified;
+    private Long isEnabled;
 
-    public ClientAdminResponse(Long id, String name, String email, String mobile,Long clientAdminDetailId, String companyName, String panNumber, String gstNumber, String businessType, String communicationAddress, Long createdBy) {
+    public ClientAdminResponse(Long id, String firstName, String lastName, String email, String mobile, Long clientAdminDetailId, String companyName, String panNumber, String gstNumber, String businessType, String communicationAddress, Long isVerified, Long isEnabled) {
         this.id = id;
-        this.name = name;
+        this.firstName = firstName;
+        this.lastName = lastName;
         this.email = email;
         this.mobile = mobile;
         this.clientAdminDetailId = clientAdminDetailId;
@@ -30,6 +33,7 @@ public class ClientAdminResponse {
         this.gstNumber = gstNumber;
         this.businessType = businessType;
         this.communicationAddress = communicationAddress;
-        this.createdBy = createdBy;
+        this.isVerified = isVerified;
+        this.isEnabled = isEnabled;
     }
 }

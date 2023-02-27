@@ -1,41 +1,27 @@
 package com.infin.service.impl;
 
-import com.infin.dto.PagedResponse;
 import com.infin.dto.UserRequestDto;
-import com.infin.dto.client.ClientAdminResponse;
 import com.infin.dto.platform.admin.PlatformAdminResponse;
-import com.infin.dto.platform.manager.PlatformManagerResponse;
-import com.infin.dto.platform.user.PlatformUserResponse;
-import com.infin.dto.professional.admin.ProfessionalAdminResponse;
 import com.infin.entity.User;
 import com.infin.exception.BadRequestException;
 import com.infin.exception.NotFoundException;
 import com.infin.repository.PlatformAdminRepository;
-import com.infin.repository.PlatformManagerRepository;
-import com.infin.repository.PlatformUserRepository;
 import com.infin.repository.UserRepository;
 import com.infin.security.UserPrincipal;
 import com.infin.service.PlatformAdminService;
 import com.infin.util.AppConstants;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Collections;
-import java.util.List;
 
 @Service
 public class PlatformAdminServiceImpl implements PlatformAdminService {
     @Autowired
     private PlatformAdminRepository platformAdminServiceRepository;
     @Autowired
-    UserRepository userRepository;
+    private UserRepository userRepository;
 
     @Override
     public PlatformAdminResponse getPlatformAdminDetail(UserPrincipal currentUser) {
@@ -46,42 +32,6 @@ public class PlatformAdminServiceImpl implements PlatformAdminService {
                         .toString())
         );
         return platformAdminResponse;
-    }
-
-    @Override
-    public PagedResponse<ProfessionalAdminResponse> getProfessionalAdminList(int page, int size) {
-        validatePageNumberAndSize(page, size);
-
-        Pageable pageable = PageRequest.of(page,size, Sort.Direction.DESC,"createdAt");
-        Page<ProfessionalAdminResponse> professionalAdminResponse = platformAdminServiceRepository.findAllProfessionalAdmin(pageable);
-
-
-        if (professionalAdminResponse.getNumberOfElements() == 0) {
-            return new PagedResponse<>(Collections.emptyList(), professionalAdminResponse.getNumber(),
-                    professionalAdminResponse.getSize(), professionalAdminResponse.getTotalElements(), professionalAdminResponse.getTotalPages(), professionalAdminResponse.isLast());
-        }
-        List<ProfessionalAdminResponse> professionalAdminResponseList = professionalAdminResponse.getContent();
-
-        return new PagedResponse<>(professionalAdminResponseList, professionalAdminResponse.getNumber(),
-                professionalAdminResponse.getSize(), professionalAdminResponse.getTotalElements(), professionalAdminResponse.getTotalPages(), professionalAdminResponse.isLast());
-    }
-
-    @Override
-    public PagedResponse<ClientAdminResponse> getClientAdminList(int page, int size) {
-        validatePageNumberAndSize(page, size);
-
-        Pageable pageable = PageRequest.of(page,size, Sort.Direction.DESC,"createdAt");
-        Page<ClientAdminResponse> clientAdminResponse = platformAdminServiceRepository.findAllClientAdmin(pageable);
-
-
-        if (clientAdminResponse.getNumberOfElements() == 0) {
-            return new PagedResponse<>(Collections.emptyList(), clientAdminResponse.getNumber(),
-                    clientAdminResponse.getSize(), clientAdminResponse.getTotalElements(), clientAdminResponse.getTotalPages(), clientAdminResponse.isLast());
-        }
-        List<ClientAdminResponse> clientAdminResponseList = clientAdminResponse.getContent();
-
-        return new PagedResponse<>(clientAdminResponseList, clientAdminResponse.getNumber(),
-                clientAdminResponse.getSize(), clientAdminResponse.getTotalElements(), clientAdminResponse.getTotalPages(), clientAdminResponse.isLast());
     }
 
     @Override
@@ -97,7 +47,8 @@ public class PlatformAdminServiceImpl implements PlatformAdminService {
                             .toString());
         }
         User updatePlatformAdminldata = userRepository.findById(id).get();
-        updatePlatformAdminldata.setName(updateRequest.getName());
+        updatePlatformAdminldata.setFirstName(updateRequest.getFirstName());
+        updatePlatformAdminldata.setLastName(updateRequest.getLastName());
         updatePlatformAdminldata.setMobile(updateRequest.getMobile());
         updatePlatformAdminldata.setUpdatedBy(userPrincipal.getId());
         userRepository.save(updatePlatformAdminldata);
@@ -106,7 +57,7 @@ public class PlatformAdminServiceImpl implements PlatformAdminService {
 
     @Override
     @Transactional
-    public Integer verifyUserAccountById(Long status, Long id)
+    public Integer verifyUserAccountById(Long status,Long id)
     {
         if(!userRepository.existsById(id)) {
             throw new NotFoundException(

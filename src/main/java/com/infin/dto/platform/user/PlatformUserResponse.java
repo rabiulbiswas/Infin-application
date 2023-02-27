@@ -9,18 +9,22 @@ import lombok.Setter;
 @Getter
 public class PlatformUserResponse {
     private Long id;
-    private String name;
+    private String firstName;
+    private String lastName;
     private String email;
     private String mobile;
     private Long platformUserDetailId;
     private String contactAddress;
     private String uploadedDocument;
     private String validIdProof;
-    private Integer platformManagerId;
+    private Long platformManagerId;
+    private Long isVerified;
+    private Long isEnabled;
 
-    public PlatformUserResponse(Long id, String name, String email, String mobile, Long platformUserDetailId, String contactAddress, String uploadedDocument, String validIdProof, Integer platformManagerId) {
+    public PlatformUserResponse(Long id, String firstName, String lastName, String email, String mobile, Long platformUserDetailId, String contactAddress, String uploadedDocument, String validIdProof, Long platformManagerId, Long isVerified, Long isEnabled) {
         this.id = id;
-        this.name = name;
+        this.firstName = firstName;
+        this.lastName = lastName;
         this.email = email;
         this.mobile = mobile;
         this.platformUserDetailId = platformUserDetailId;
@@ -28,5 +32,7 @@ public class PlatformUserResponse {
         this.uploadedDocument = uploadedDocument;
         this.validIdProof = validIdProof;
         this.platformManagerId = platformManagerId;
+        this.isVerified = isVerified;
+        this.isEnabled = isEnabled;
     }
 }

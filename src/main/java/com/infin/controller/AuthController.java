@@ -34,7 +34,7 @@ public class AuthController {
         try {
             JwtAuthenticationResponse jwtAuthenticationResponse = authService.userSignIn(loginRequest);
 
-            if(jwtAuthenticationResponse.getVerified()==0){
+            if(jwtAuthenticationResponse.getIsVerified()==0){
                 return new ResponseEntity(new ApiResponse(false, "Your account verification in-progress!"),
                         HttpStatus.OK);
             }

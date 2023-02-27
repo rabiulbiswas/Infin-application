@@ -18,10 +18,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.validation.Valid;
-import java.net.URI;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
@@ -49,7 +47,7 @@ public class PlatformAdminController {
         try {
             JwtAuthenticationResponse jwtAuthenticationResponse = authService.userSignIn(loginRequest);
 
-            if (jwtAuthenticationResponse.getVerified() == 0) {
+            if (jwtAuthenticationResponse.getIsVerified() == 0) {
                 return new ResponseEntity(new ApiResponse(false, "Your account verification in-progress!"),
                         HttpStatus.OK);
             }
@@ -87,7 +85,7 @@ public class PlatformAdminController {
                                                      @RequestParam(value = "size", defaultValue = AppConstants.DEFAULT_PAGE_SIZE) int size) {
         ResponseEntity<?> resp = null;
         try {
-            PagedResponse<ProfessionalAdminResponse> professionalAdminResponse = platformAdminService.getProfessionalAdminList(page, size);
+            PagedResponse<ProfessionalAdminResponse> professionalAdminResponse = professionalAdminService.getProfessionalAdminList(page, size);
             resp = new ResponseEntity<PagedResponse<ProfessionalAdminResponse>>(professionalAdminResponse, HttpStatus.OK);
         } catch (NotFoundException nfe) {
             throw nfe;
@@ -105,7 +103,7 @@ public class PlatformAdminController {
                                                @RequestParam(value = "size", defaultValue = AppConstants.DEFAULT_PAGE_SIZE) int size) {
         ResponseEntity<?> resp = null;
         try {
-            PagedResponse<ClientAdminResponse> clientAdminResponse = platformAdminService.getClientAdminList(page, size);
+            PagedResponse<ClientAdminResponse> clientAdminResponse = clientAdminService.getAllClientAdminList(page, size);
             resp = new ResponseEntity<PagedResponse<ClientAdminResponse>>(clientAdminResponse, HttpStatus.OK);
         } catch (NotFoundException nfe) {
             throw nfe;
@@ -164,14 +162,14 @@ public class PlatformAdminController {
         return new ResponseEntity(new ApiResponse(true, "Platform user created successfully"), HttpStatus.CREATED);
     }
 
-    @PatchMapping("/verify-account/{id}/{status}")
+    @PatchMapping("/verify-account/{status}/{id}")
     @PreAuthorize("hasRole('PLATFORM_ADMIN')")
-    public ResponseEntity<?> verifyUserAccountById(@PathVariable Long id, @PathVariable Long status) {
+    public ResponseEntity<?> verifyUserAccountById(@PathVariable Long status,@PathVariable Long id) {
         ResponseEntity<?> resp = null;
         try {
-            platformAdminService.verifyUserAccountById(id, status);
-            resp = new ResponseEntity<String>(
-                    "Account verified successfully", HttpStatus.OK);
+            platformAdminService.verifyUserAccountById(status,id);
+            resp = new ResponseEntity(new ApiResponse(true, "Account verified successfully"),
+                    HttpStatus.OK);
 
         } catch (NotFoundException nfe) {
             throw nfe;
@@ -283,8 +281,88 @@ public class PlatformAdminController {
             throw nfe;
         } catch (Exception e) {
             e.printStackTrace();
-            resp= new ResponseEntity<String>(
-                    "Unable to fetch Professional Admin Profile", HttpStatus.INTERNAL_SERVER_ERROR);
+            resp = new ResponseEntity(new ApiResponse(false, "Unable to fetch Professional Admin Profile"),
+                    HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        return resp;
+    }
+
+    @PutMapping("/update-professional-admin-profile/{id}")
+    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
+    public ResponseEntity<?> updateProfessionalAdmin(@PathVariable Long id, @RequestBody UserRequestDto updateRequest){
+
+        ResponseEntity<String> resp = null;
+        try {
+            professionalAdminService.updateProfessionalAdminProfile(id,updateRequest);
+            resp = new ResponseEntity(new ApiResponse(true, "Professional Admin Profile Updated Successfully"),
+                    HttpStatus.OK);
+
+        } catch (NotFoundException nfe) {
+            throw nfe;
+        } catch (Exception e) {
+            e.printStackTrace();
+            resp = new ResponseEntity(new ApiResponse(false, "Unable to Update Professional Admin profile"),
+                    HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        return resp;
+    }
+
+    @PutMapping("/update-platform-manager-profile/{id}")
+    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
+    public ResponseEntity<?> updatePlatformManager(@PathVariable Long id, @RequestBody UserRequestDto updateRequest){
+
+        ResponseEntity<String> resp = null;
+        try {
+            platformManagerService.updatePlatformManagerProfile(id, updateRequest);
+            resp = new ResponseEntity(new ApiResponse(true, "Platform Manager Profile Updated Successfully"),
+                    HttpStatus.OK);
+
+        } catch (NotFoundException nfe) {
+            throw nfe;
+        } catch (Exception e) {
+            e.printStackTrace();
+            resp = new ResponseEntity(new ApiResponse(false, "Unable to Update Platform Manager profile"),
+                    HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        return resp;
+    }
+
+    @PutMapping("/update-platform-user-profile/{id}")
+    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
+    public ResponseEntity<?> updatePlatformUser(@PathVariable Long id, @RequestBody UserRequestDto updateRequest){
+
+        ResponseEntity<String> resp = null;
+        try {
+            platformUserService.updatePlatformUserProfile(id, updateRequest);
+            resp = new ResponseEntity(new ApiResponse(true, "Platform User Profile Updated Successfully"),
+                    HttpStatus.OK);
+
+        } catch (NotFoundException nfe) {
+            throw nfe;
+        } catch (Exception e) {
+            e.printStackTrace();
+            resp = new ResponseEntity(new ApiResponse(false, "Unable to Update Platform User profile"),
+                    HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        return resp;
+    }
+
+    @PutMapping("/update-client-admin-profile/{clientAdminId}")
+    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
+    public ResponseEntity<?> updateClientAdmin(@PathVariable Long clientAdminId, @RequestBody UserRequestDto updateRequest){
+
+        ResponseEntity<String> resp = null;
+        try {
+            clientAdminService.updateClientAdminProfile(clientAdminId, updateRequest);
+            resp = new ResponseEntity(new ApiResponse(true, "Client Admin Profile Updated Successfully"),
+                    HttpStatus.OK);
+
+        } catch (NotFoundException nfe) {
+            throw nfe;
+        } catch (Exception e) {
+            e.printStackTrace();
+            resp = new ResponseEntity(new ApiResponse(false, "Unable to Update Client Admin profile"),
+                    HttpStatus.INTERNAL_SERVER_ERROR);
         }
         return resp;
     }

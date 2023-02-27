@@ -10,7 +10,7 @@ import javax.validation.constraints.NotEmpty;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ClientAdminRequest {
-
+    private Long clientAdminDetailId;
     @NotEmpty(message = "Company Name shouldn't be empty")
     private String companyName;
     @NotEmpty(message = "Pan Number shouldn't be empty")

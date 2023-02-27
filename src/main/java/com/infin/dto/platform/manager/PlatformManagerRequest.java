@@ -10,7 +10,7 @@ import javax.validation.constraints.NotEmpty;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PlatformManagerRequest {
-
+    private Long platformManagerDetailId;
     @NotEmpty(message = "Location shouldn't be empty")
     private String contactAddress;
     @NotEmpty(message = "Please upload any document")

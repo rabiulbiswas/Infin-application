@@ -4,6 +4,7 @@ import com.infin.dto.client.ClientAdminRequest;
 import com.infin.dto.platform.manager.PlatformManagerRequest;
 import com.infin.dto.platform.user.PlatformUserRequest;
 import com.infin.dto.professional.admin.ProfessionalAdminRequest;
+import com.infin.dto.professional.manager.ProfessionalManagerRequest;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,9 +16,10 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserRequestDto {
-
-    @NotEmpty(message = "Name shouldn't be empty")
-    private String name;
+    @NotEmpty(message = "First Name shouldn't be empty")
+    private String firstName;
+    @NotEmpty(message = "Last Name shouldn't be empty")
+    private String lastName;
     @Email(message = "invalid email address")
     @NotEmpty(message = "Email shouldn't be empty")
     private String email;
@@ -33,5 +35,6 @@ public class UserRequestDto {
 
     private PlatformManagerRequest platformManagerDetail;
     private PlatformUserRequest platformUserRequest;
+    private ProfessionalManagerRequest professionalManagerRequest;
 
 }

@@ -14,17 +14,19 @@ public class JwtAuthenticationResponse {
     private String tokenType = "Bearer";
 
     private Long id;
-    private String name;
+    private String firstName;
+    private String lastName;
     private String email;
-    private Long verified;
+    private Long isVerified;
     private List<String> roles;
 
-    public JwtAuthenticationResponse(String jwt,Long id, String name, String email,Long verified, List<String> roles) {
+    public JwtAuthenticationResponse(String jwt,Long id, String firstName,String lastName, String email,Long isVerified, List<String> roles) {
         this.accessToken = jwt;
         this.id = id;
-        this.name = name;
+        this.firstName = firstName;
+        this.lastName = lastName;
         this.email = email;
-        this.verified = verified;
+        this.isVerified = isVerified;
         this.roles = roles;
     }
 }

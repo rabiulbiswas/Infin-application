@@ -33,7 +33,6 @@ public class ClientAdminController {
     @GetMapping("/profile-detail")
     @PreAuthorize("hasRole('CLIENT_ADMIN')")
     public ResponseEntity<?> getAllClients(@CurrentUser UserPrincipal currentUser) {
-        System.out.println("client id ................"+ currentUser.getId());
         ResponseEntity<?> resp= null;
         try {
             ClientAdminResponse clientAdminResponse =  clientAdminService.getClientAdminDetail(currentUser.getId());

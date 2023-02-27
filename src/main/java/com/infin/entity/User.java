@@ -4,6 +4,7 @@ import com.infin.entity.client.ClientAdminDetail;
 import com.infin.entity.platform.manager.PlatformManagerDetail;
 import com.infin.entity.platform.user.PlatformUserDetail;
 import com.infin.entity.professional.admin.ProfessionalAdminDetail;
+import com.infin.entity.professional.manager.ProfessionalManagerDetail;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -40,7 +41,11 @@ public class User extends DateAudit {
 
     @NotBlank
     @Size(max = 40)
-    private String name;
+    private String firstName;
+
+    @NotBlank
+    @Size(max = 40)
+    private String lastName;
 
     @NaturalId
     @NotBlank
@@ -64,10 +69,10 @@ public class User extends DateAudit {
     private Long updatedBy;
 
     @Column(nullable = false, columnDefinition = "int default 0")
-    private Long verified;
+    private Long isVerified;
 
     @ColumnDefault("0")
-    private Long enabled;
+    private Long isEnabled;
 
     @OneToOne(fetch = FetchType.LAZY,
             cascade =  CascadeType.ALL,
@@ -88,6 +93,10 @@ public class User extends DateAudit {
             cascade =  CascadeType.ALL,
             mappedBy = "user")
     private PlatformUserDetail platformUserDetail;
+    @OneToOne(fetch = FetchType.LAZY,
+            cascade =  CascadeType.ALL,
+            mappedBy = "user")
+    private ProfessionalManagerDetail professionalManagerDetail;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "user_roles",
@@ -97,8 +106,9 @@ public class User extends DateAudit {
 
 
 
-    public void User(String name, String email, String password, String mobile) {
-        this.name = name;
+    public void User(String firstName,String lastName, String email, String password, String mobile) {
+        this.firstName = firstName;
+        this.lastName = lastName;
         this.email = email;
         this.mobile = mobile;
 

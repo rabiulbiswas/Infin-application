@@ -1,18 +1,23 @@
 package com.infin.controller;
 
 import com.infin.dto.ApiResponse;
+import com.infin.dto.ChangePasswordRequest;
 import com.infin.dto.ForgetPasswordRequest;
 import com.infin.dto.UserRequestDto;
 import com.infin.entity.User;
 import com.infin.exception.NotFoundException;
+import com.infin.security.CurrentUser;
+import com.infin.security.UserPrincipal;
 import com.infin.service.PasswordService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
 
+@CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/password")
 public class PasswordController {
@@ -74,6 +79,27 @@ public class PasswordController {
         try {
             passwordService.updateNewPassword(restNewPasswordRequest);
             resp = new ResponseEntity(new ApiResponse(true, "You have successfully reset your password.  You may now login."),
+                    HttpStatus.OK);
+
+        } catch (NotFoundException nfe) {
+            throw nfe;
+        } catch (Exception e) {
+            e.printStackTrace();
+            resp = new ResponseEntity<String>(
+                    "Something went wrong,please try again",
+                    HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        return resp;
+    }
+
+    @PostMapping("/change-password")
+    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN','PLATFORM_MANAGER','PLATFORM_USER','PROFESSIONAL_ADMIN','PROFESSIONAL_MANAGER','PROFESSIONAL_USER')")
+    public ResponseEntity<?> changePassword(@CurrentUser UserPrincipal currentUser, @RequestBody ChangePasswordRequest changePasswordRequest){
+
+        ResponseEntity<String> resp = null;
+        try {
+            passwordService.changePassword(currentUser.getId(),changePasswordRequest);
+            resp = new ResponseEntity(new ApiResponse(true, "You have successfully changed your password."),
                     HttpStatus.OK);
 
         } catch (NotFoundException nfe) {

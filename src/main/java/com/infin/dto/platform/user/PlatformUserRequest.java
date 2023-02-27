@@ -9,12 +9,13 @@ import javax.validation.constraints.NotEmpty;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PlatformUserRequest {
+    private Long platformUserDetailId;
     @NotEmpty(message = "Location shouldn't be empty")
     private String contactAddress;
     @NotEmpty(message = "Please upload any document")
     private String uploadedDocument;
     @NotEmpty(message = "Please upload any valid ID proof")
     private String validIdProof;
-    @NotEmpty
-    private Integer platformManagerId;
+
+    private Long platformManagerId;
 }

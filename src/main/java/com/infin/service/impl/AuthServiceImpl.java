@@ -10,6 +10,7 @@ import com.infin.entity.client.ClientAdminDetail;
 import com.infin.entity.platform.manager.PlatformManagerDetail;
 import com.infin.entity.platform.user.PlatformUserDetail;
 import com.infin.entity.professional.admin.ProfessionalAdminDetail;
+import com.infin.entity.professional.manager.ProfessionalManagerDetail;
 import com.infin.repository.RoleRepository;
 import com.infin.repository.UserRepository;
 import com.infin.security.JwtTokenProvider;
@@ -17,6 +18,7 @@ import com.infin.security.UserPrincipal;
 import com.infin.service.AuthService;
 import com.infin.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseCookie;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -66,7 +68,8 @@ public class AuthServiceImpl implements AuthService {
                 signUpRequest.getProfessionalAdminDetail().getMembershipNumber(),
                 signUpRequest.getProfessionalAdminDetail().getContactAddress()); */
         User user = new User();
-        user.setName(signUpRequest.getName());
+        user.setFirstName(signUpRequest.getFirstName());
+        user.setLastName(signUpRequest.getLastName());
         user.setEmail(signUpRequest.getEmail());
         user.setMobile(signUpRequest.getMobile());
 
@@ -85,8 +88,8 @@ public class AuthServiceImpl implements AuthService {
             user.setCreatedBy(userPrincipal.getId());
             user.setUpdatedBy(userPrincipal.getId());
         }
-        user.setVerified(0l);
-        user.setEnabled(0l);
+        user.setIsVerified(0l);
+        user.setIsEnabled(0l);
         if (strRoles == null) {
             roleRepository.findByName(RoleName.NOT_USER_ROLE)
                     .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
@@ -136,15 +139,21 @@ public class AuthServiceImpl implements AuthService {
                 } else if (role.equals("professional-manager")) {
                     Role professionalManagerRole = roleRepository.findByName(RoleName.ROLE_PROFESSIONAL_MANAGER)
                             .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+                    String randomPassword = generatePassword();
+                    user.setPassword(passwordEncoder.encode(randomPassword));
+                    ProfessionalManagerDetail professionalManagerDetail = getProfessionalManagerDetail(signUpRequest);
                     user.setRoleId(professionalManagerRole.getId());
                     user.setRoles(Collections.singleton(professionalManagerRole));
+                    user.setProfessionalManagerDetail(professionalManagerDetail);
+                    professionalManagerDetail.setUser(user);
+                    sendEmail(signUpRequest, randomPassword);
                 } else if (role.equals("professional-user")) {
                     Role professionalUserRole = roleRepository.findByName(RoleName.ROLE_PROFESSIONAL_USER)
                             .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
                     user.setRoleId(professionalUserRole.getId());
                     user.setRoles(Collections.singleton(professionalUserRole));
                 } else if (role.equals("client-admin")) {
-                    Role clientAdminRole = roleRepository.findByName(RoleName.CLIENT_ADMIN)
+                    Role clientAdminRole = roleRepository.findByName(RoleName.ROLE_CLIENT_ADMIN)
                             .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
                     user.setRoleId(clientAdminRole.getId());
                     ClientAdminDetail clientAdminDetail = getClientAdminDetail(signUpRequest);
@@ -152,7 +161,7 @@ public class AuthServiceImpl implements AuthService {
                     user.setClientAdminDetails(clientAdminDetail);
                     clientAdminDetail.setUser(user);
                 } else if (role.equals("client-user")) {
-                    Role clientUserRole = roleRepository.findByName(RoleName.CLIENT_USER)
+                    Role clientUserRole = roleRepository.findByName(RoleName.ROLE_CLIENT_USER)
                             .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
 
                     user.setRoles(Collections.singleton(clientUserRole));
@@ -163,6 +172,12 @@ public class AuthServiceImpl implements AuthService {
             });
         }
        return userRepository.save(user);
+    }
+
+    private static ProfessionalManagerDetail getProfessionalManagerDetail(UserRequestDto signUpRequest) {
+        ProfessionalManagerDetail professionalManagerDetail =  new ProfessionalManagerDetail();
+        professionalManagerDetail.setValidIdProof(signUpRequest.getProfessionalManagerRequest().getValidIdProof());
+        return professionalManagerDetail;
     }
 
     private static ProfessionalAdminDetail getProfessionalAdminDetail(UserRequestDto signUpRequest) {
@@ -195,7 +210,7 @@ public class AuthServiceImpl implements AuthService {
             SimpleMailMessage passwordResetEmail = new SimpleMailMessage();
             passwordResetEmail.setFrom("support@infin.com");
             passwordResetEmail.setTo(signUpRequest.getEmail());
-            passwordResetEmail.setSubject("Password Reset Request");
+            passwordResetEmail.setSubject("Infin App user credential");
             passwordResetEmail.setText("You have registedred as platform manager in infin web application:\n"
                     +"you log in credentials:"
                     + "User ID =" + signUpRequest.getEmail()+"Password =" + randomPassword);
@@ -247,6 +262,7 @@ public class AuthServiceImpl implements AuthService {
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         String jwt = tokenProvider.generateToken(authentication);
+        ResponseCookie jwtCookie = tokenProvider.generateJwtCookie(authentication);
         UserPrincipal userDetails = (UserPrincipal) authentication.getPrincipal();
         List<String> roles = userDetails.getAuthorities().stream()
                 .map(item -> item.getAuthority())
@@ -254,9 +270,10 @@ public class AuthServiceImpl implements AuthService {
 
         return new JwtAuthenticationResponse(jwt,
                 userDetails.getId(),
-                userDetails.getName(),
+                userDetails.getFirstName(),
+                userDetails.getLastName(),
                 userDetails.getEmail(),
-                userDetails.getVerified(),
+                userDetails.getIsVerified(),
                 roles);
     }
 }
